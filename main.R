@@ -24,13 +24,11 @@ highchart() %>%
   hc_chart(type = 'bar', options3d = list(enabled = TRUE, beta = 1, alpha = 1)) %>% 
   hc_add_theme(hc_theme_google())
 
+
+
+hchart(by_type, type = 'treemap', hcaes(x = 'Type', value = 'n', color = 'n'))
+
 rm(by_type)
-
-
-
-
-
-
 
 
 
@@ -51,6 +49,12 @@ weed_effects <- weed %>%
   mutate(Effects = str_split(Effects,',')) %>% 
   unnest(Effects)
 
+
+weed_effects %>% 
+  count(Effects) %>% 
+  hchart(type = 'treemap', hcaes(x = 'Effects', value = 'n', color = 'n'))
+
+
 df1 <- weed %>% 
   group_by(name = Type, drilldown = Type) %>% 
   summarise(y = n()) %>% 
@@ -67,6 +71,10 @@ df2 <- weed_effects %>%
       summarise(y=n()) %>% 
       select(name, y, drilldown) %>%
       arrange(desc(y)))) 
+
+
+
+
 
 
 # df2$data %>% head(1)
@@ -107,6 +115,13 @@ weed_flavor <- weed %>%
   filter(Flavor != 'none') %>% 
   mutate(Flavor = str_split(Flavor, ',')) %>% 
   unnest(Flavor)
+
+
+weed_flavor %>% 
+  count(Flavor) %>% 
+  hchart(type = 'treemap', hcaes(x = 'Flavor', value = 'n', color = 'n'))
+
+
 
 df1 <- weed %>% 
   group_by(name = Type, drilldown = Type) %>% 
