@@ -1,6 +1,11 @@
 library(tidyverse)
 library(skimr)
 library(highcharter)
+library()
+
+
+
+
 
 
 weed <- read_csv("input/cannabis.csv")
@@ -154,7 +159,7 @@ rm(a, b, lst)
 
 
 
-
+weed$Description[2]
 
 
 
