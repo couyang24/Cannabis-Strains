@@ -221,7 +221,36 @@ frequentTerms <- function(text){
 }
 
 
+# clean by each Type
+clean_top_char <- function(dataset){
+  all_dialogue <- list()
+  namelist <- list()
+  
+  for (i in 1:3){
+    top <- dataset %>% count(Type) %>% arrange(desc(n)) %>% head(20)
+    name <- top$Type[i]
+    Description <- paste(dataset$Description[dataset$Type == name], collapse = " ")
+    all_dialogue <- c(all_dialogue, Description)
+    namelist <- c(namelist, name)
+    
+  }
+  
+  
+  
+  all_clean <- all_dialogue %>% 
+    VectorSource() %>% 
+    Corpus() %>% 
+    cleanCorpus() %>% 
+    TermDocumentMatrix() %>%
+    as.matrix()
+  
+  colnames(all_clean) <- namelist
+  
+  assign("all_clean",all_clean,.GlobalEnv)
+  all_clean %>% head()
+}
 
+weed %>% clean_top_char()
 
 
 
@@ -241,10 +270,6 @@ weed$Description %>%
          margin = list(l = 100))
 
 
-
-
-
-weed %>% clean_top_char()
 
 commonality.cloud(all_clean[,c("sativa","indica")], colors = "steelblue1", at.least = 2, max.words = 100)
 comparison.cloud(all_clean[,c("sativa","indica")], colors = c("#F8766D", "#00BFC4"), max.words=50)
@@ -292,9 +317,41 @@ effectByType %>%
                       zaxis = list(title = 'indica')))
 
 
+library(ggraph)
+library(igraph)
+library(ggthemes)
+
+effectByType %>%
+  mutate(type = 'hybrid') %>%
+  select(word, type, hybrid) %>% 
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = hybrid), show.legend = FALSE) +
+  geom_node_point(color = "firebrick", size = 20, alpha = .5) +
+  geom_node_text(aes(label = name), col = "white") +
+  theme_solarized(light = F)
 
 
+library(visNetwork)
+network3_edg <- effectByType %>% 
+  mutate(type = 'hybrid') %>%
+  select(word, type, hybrid) %>% 
+  filter(hybrid>0) %>% 
+  rename(from = type, to = word, weight = hybrid, width = hybrid)
 
+network3_node <- effectByType %>% 
+  mutate(type = 'hybrid') %>%
+  filter(hybrid>0) %>% 
+  select(word, hybrid) %>% 
+  rename(id = word, size = hybrid)
+network3_node$label <- network3_node$id # Node label
+
+network3_node <- bind_rows(network3_node,data.frame(id = 'hybrid',  size = 24,  label = 'hybrid'))
+
+visNetwork(network3_node, network3_edg, height = "500px", width = "100%") %>% 
+  visIgraphLayout(layout = "layout_with_lgl") %>% 
+  visEdges(shadow = TRUE,
+           color = list(color = "gray", highlight = "orange"))
 
 
 
