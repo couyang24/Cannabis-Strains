@@ -1,75 +1,189 @@
 ---
-title: "main"
-author: "Owen Ouyang"
-date: "June 7, 2018"
-output: html_document
+title: 'Effect and Flavor of the 3 Different Type of Cannabis Analysis'
+author: "Chengran (Owen) Ouyang"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+******
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Introduction
 
-```{r cars}
+******
+
+
+<img src="https://images.unsplash.com/photo-1518589259587-1566f6ccd972?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=f1342e3f0f84c52580e73c607ae29f6a&auto=format&fit=crop&w=1868&q=80">
+
+
+**Objectives:** The goal of this kernel is to analyze the effect and flavor of 3 different type of Cannabis.
+
+
+EDA includes datatable, skim, 3D plotly, DrillDown and NLP.
+
+
+If you have any question, please leave a comment and if you like the kernel, please give me an upvote~ Thanks!
+
+
+******
+# Basic Set up{.tabset .tabset-fade .tabset-pills}
+******
+
+
+******
+
+## Load Packages
+
+******
+
+
+```{r  message=FALSE, warning=FALSE}
 library(tidyverse)
 library(skimr)
 library(highcharter)
+# library(qdap)
+library(tm)
+library(plotly)
+library(viridis)
+library(wordcloud)
+library(plotrix)
+library(DescTools)
+library(DT)
+```
 
 
+******
+## Load Dataset
+******
+
+
+```{r  message=FALSE, warning=FALSE}
 weed <- read_csv("input/cannabis.csv")
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+******
+# Glimpses{.tabset .tabset-fade .tabset-pills}
+******
 
-```{r pressure, echo=FALSE}
-weed %>% skim()
-weed %>% glimpse() 
-weed %>% head()
 
+******
+## skim
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+weed %>% skim() %>% kable()
+```
+
+
+******
+## datatable
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+weed %>% 
+  datatable(filter = 'top', options = list(
+  pageLength = 15, autoWidth = TRUE
+
+))
+```
+
+
+******
+## glimpse
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+weed %>% glimpse()
+```
+
+
+******
+# Cannabis Ranking Distribution
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+weed$Rating %>% PlotFdist("Cannabis Ranking Distribution")
+```
+
+
+******
+# TreeMaps{.tabset .tabset-fade .tabset-pills}
+******
+
+
+******
+## TreeMap by Type
+******
+
+
+```{r  message=FALSE, warning=FALSE}
 by_type <- weed %>% 
   count(Type)
-
-highchart() %>% 
-  hc_xAxis(categories = by_type$Type) %>% 
-  hc_add_series(name = 'number of cannabis', data = by_type$n, colorByPoint = 1) %>% 
-  hc_title(text = "Cannabis by Types")  %>%
-  hc_chart(type = 'bar', options3d = list(enabled = TRUE, beta = 1, alpha = 1)) %>% 
-  hc_add_theme(hc_theme_google())
+hchart(by_type, type = 'treemap', hcaes(x = 'Type', value = 'n', color = 'n'))
 
 rm(by_type)
+```
 
 
+******
+## TreeMap by Effects
+******
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r  message=FALSE, warning=FALSE}
 weed_effects <- weed %>% 
   mutate(Effects = str_split(Effects,',')) %>% 
   unnest(Effects)
 
+
+weed_effects %>% 
+  count(Effects) %>% 
+  hchart(type = 'treemap', hcaes(x = 'Effects', value = 'n', color = 'n'))
+```
+
+
+******
+## TreeMap by Flavors
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+weed_flavor <- weed %>% 
+  filter(Flavor != 'none') %>% 
+  mutate(Flavor = str_split(Flavor, ',')) %>% 
+  unnest(Flavor)
+
+
+weed_flavor %>% 
+  count(Flavor) %>% 
+  hchart(type = 'treemap', hcaes(x = 'Flavor', value = 'n', color = 'n'))
+```
+
+
+******
+# Drill Down Graph for 3 Types by Effects and by Flavors 
+******
+
+
+```{r  message=FALSE, warning=FALSE}
 df1 <- weed %>% 
   group_by(name = Type, drilldown = Type) %>% 
   summarise(y = n()) %>% 
@@ -87,9 +201,6 @@ df2 <- weed_effects %>%
       select(name, y, drilldown) %>%
       arrange(desc(y)))) 
 
-
-# df2$data %>% head(1)
-
 a <- highchart() %>% 
   hc_chart(type = 'bar') %>% 
   hc_xAxis(type = "category") %>% 
@@ -102,30 +213,10 @@ a <- highchart() %>%
   hc_title(text = "Type of Cannbis vs Effects") %>% 
   hc_add_theme(hc_theme_darkunica())
 
-rm(df1, df2, weed_effects)
+rm(df1, df2)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-weed_flavor <- weed %>% 
-  filter(Flavor != 'none') %>% 
-  mutate(Flavor = str_split(Flavor, ',')) %>% 
-  unnest(Flavor)
 
 df1 <- weed %>% 
   group_by(name = Type, drilldown = Type) %>% 
@@ -155,24 +246,218 @@ b <- highchart() %>%
   hc_legend(enabled = F) %>% 
   hc_title(text = "Type of Cannbis vs Flavor") %>% 
   hc_add_theme(hc_theme_darkunica())
-rm(df1, df2, weed_flavor)
+rm(df1, df2)
 
 
-weed %>% 
-  filter(Type == 'indica') %>% 
-  select(Flavor)
 
 lst <- list(
   a,
   b
 )
 
+
+
 hw_grid(lst, rowheight = 400)
+rm(a, b, lst)
+```
 
 
+******
+# NLP Setup{.tabset .tabset-fade .tabset-pills}
+******
 
 
+******
+## clean corpus
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+# clean corpus
+cleanCorpus <- function(corpus){
+  
+  corpus.tmp <- tm_map(corpus, removePunctuation)
+  corpus.tmp <- tm_map(corpus.tmp, stripWhitespace)
+  corpus.tmp <- tm_map(corpus.tmp, content_transformer(tolower))
+  v_stopwords <- c(stopwords("en"), c("thats","weve","hes","theres","ive","im",
+                                      "will","can","cant","dont","youve","us",
+                                      "youre","youll","theyre","whats","didnt"))
+  corpus.tmp <- tm_map(corpus.tmp, removeWords, v_stopwords)
+  corpus.tmp <- tm_map(corpus.tmp, removeNumbers)
+  return(corpus.tmp)
+}
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+******
+## frequent terms 
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+# frequent terms 
+frequentTerms <- function(text){
+  
+  s.cor <- Corpus(VectorSource(text))
+  s.cor.cl <- cleanCorpus(s.cor)
+  s.tdm <- TermDocumentMatrix(s.cor.cl)
+  s.tdm <- removeSparseTerms(s.tdm, 0.999)
+  m <- as.matrix(s.tdm)
+  word_freqs <- sort(rowSums(m), decreasing=TRUE)
+  dm <- data.frame(word=names(word_freqs), freq=word_freqs)
+  return(dm)
+  
+}
+```
+
+
+******
+## clean by each type
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+# clean by each Type
+clean_top_char <- function(dataset){
+  all_dialogue <- list()
+  namelist <- list()
+  
+  for (i in 1:3){
+    top <- dataset %>% count(Type) %>% arrange(desc(n)) %>% head(20)
+    name <- top$Type[i]
+    Description <- paste(dataset$Description[dataset$Type == name], collapse = " ")
+    all_dialogue <- c(all_dialogue, Description)
+    namelist <- c(namelist, name)
+    
+  }
+  
+  
+  
+  all_clean <- all_dialogue %>% 
+    VectorSource() %>% 
+    Corpus() %>% 
+    cleanCorpus() %>% 
+    TermDocumentMatrix() %>%
+    as.matrix()
+  
+  colnames(all_clean) <- namelist
+  
+  assign("all_clean",all_clean,.GlobalEnv)
+  all_clean %>% head()
+}
+
+weed %>% clean_top_char()
+```
+
+
+******
+# Top 30 Words in Description
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+weed$Description %>% 
+  frequentTerms() %>% 
+  # dim()
+  head(30) %>% 
+  mutate(word = factor(word))%>% 
+  plot_ly(x = ~reorder(word,-freq), y = ~freq, colors = viridis(10)) %>%
+  add_bars(color = ~word) %>%
+  layout(title = "Top 30 Words", 
+         yaxis = list(title = " "), 
+         xaxis = list(title = ""), 
+         margin = list(l = 100))
+```
+
+
+******
+# WordCloud{.tabset .tabset-fade .tabset-pills}
+******
+
+
+******
+## Commonality Cloud
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+commonality.cloud(all_clean[,c("sativa","indica")], colors = "steelblue1", at.least = 2, max.words = 100)
+
+```
+
+
+******
+## Comparison Cloud
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+comparison.cloud(all_clean[,c("sativa","indica")], colors = c("#F8766D", "#00BFC4"), max.words=50)
+```
+
+
+******
+# Pramid Plot
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+common_words <- all_clean %>%
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(sativa>0, indica>0) %>% 
+  # select(sativa, indica)
+  mutate(difference = abs(sativa - indica)) %>% 
+  arrange(desc(difference)) 
+
+common_words_25 <- common_words%>%
+  head(25)
+
+pyramid.plot(common_words_25$sativa, common_words_25$indica,
+             labels = common_words_25$rowname, gap = 200,
+             top.labels = c("sativa", "Words", "indica"),
+             main = "Words in Common", laxlab = NULL, 
+             raxlab = NULL, unit = NULL)
+rm(common_words, common_words_25)
+```
+
+
+******
+# 3D Plotly
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+effects <- weed_effects$Effects %>% unique() %>% tolower()
+rm(weed_effects)
+
+
+effectByType <- all_clean %>%
+  as.data.frame() %>% 
+  rownames_to_column('word') %>% 
+  filter(word %in% effects) %>% 
+  mutate(word=factor(word))
+  
+
+effectByType %>% 
+  plot_ly(x=~hybrid,y=~sativa,z= ~indica, color=~word, hoverinfo = 'text', colors = viridis(15),
+          text = ~paste('Effects:', word,
+                        '<br>hybrid:', hybrid,
+                        '<br>sativa:', sativa,
+                        '<br>indica:', indica)) %>% 
+  add_markers(opacity = 0.8) %>%
+  layout(title = "Effects by Different Cannabis",
+         annotations=list(yref='paper',xref="paper",y=1.05,x=1.1, text="Effects",showarrow=F),
+         scene = list(xaxis = list(title = 'hybrid'),
+                      yaxis = list(title = 'sativa'),
+                      zaxis = list(title = 'indica')))
+```
+
+
+******
+# Conclusion
+******
+
+
+Hope you enjoyed the kernel and don't forget to upvote~ Thanks a lot!
+

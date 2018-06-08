@@ -7,12 +7,21 @@ library(plotly)
 library(viridis)
 library(wordcloud)
 library(plotrix)
+library(DescTools)
+
 
 weed <- read_csv("input/cannabis.csv")
 
 weed %>% skim()
 weed %>% glimpse() 
 weed %>% head()
+
+
+
+weed$Rating %>% PlotFdist("Cannabis Ranking Distribution")
+
+
+
 
 by_type <- weed %>% 
   count(Type)
@@ -79,7 +88,7 @@ df2 <- weed_effects %>%
 
 # df2$data %>% head(1)
 
-a <- highchart() %>% 
+(a <- highchart() %>% 
   hc_chart(type = 'bar') %>% 
   hc_xAxis(type = "category") %>% 
   hc_add_series(name = 'number of cannabis', data = df1, colorByPoint = 1) %>% 
@@ -89,9 +98,9 @@ a <- highchart() %>%
   ) %>%
   hc_legend(enabled = F) %>% 
   hc_title(text = "Type of Cannbis vs Effects") %>% 
-  hc_add_theme(hc_theme_darkunica())
+  hc_add_theme(hc_theme_darkunica()))
 
-rm(df1, df2, weed_effects)
+rm(df1, df2)
 
 
 
@@ -154,9 +163,6 @@ b <- highchart() %>%
 rm(df1, df2, weed_flavor)
 
 
-weed %>% 
-  filter(Type == 'indica') %>% 
-  select(Flavor)
 
 lst <- list(
   a,
@@ -214,34 +220,7 @@ frequentTerms <- function(text){
   
 }
 
-# clean by each character
-clean_top_char <- function(dataset){
-  all_dialogue <- list()
-  namelist <- list()
-  
-  for (i in 1:10){
-    
-    name <- top_chars$character[i]
-    dialogue <- paste(dataset$dialogue[dataset$character == name], collapse = " ")
-    all_dialogue <- c(all_dialogue, dialogue)
-    namelist <- c(namelist, name)
-    
-  }
-  
-  
-  
-  all_clean <- all_dialogue %>% 
-    VectorSource() %>% 
-    Corpus() %>% 
-    cleanCorpus() %>% 
-    TermDocumentMatrix() %>%
-    as.matrix()
-  
-  colnames(all_clean) <- namelist
-  
-  assign("all_clean",all_clean,.GlobalEnv)
-  all_clean %>% head()
-}
+
 
 
 
@@ -263,33 +242,7 @@ weed$Description %>%
 
 
 
-clean_top_char <- function(dataset){
-  all_dialogue <- list()
-  namelist <- list()
-  
-  for (i in 1:3){
-    top <- dataset %>% count(Type) %>% arrange(desc(n)) %>% head(20)
-    name <- top$Type[i]
-    Description <- paste(dataset$Description[dataset$Type == name], collapse = " ")
-    all_dialogue <- c(all_dialogue, Description)
-    namelist <- c(namelist, name)
-    
-  }
-  
-  
-  
-  all_clean <- all_dialogue %>% 
-    VectorSource() %>% 
-    Corpus() %>% 
-    cleanCorpus() %>% 
-    TermDocumentMatrix() %>%
-    as.matrix()
-  
-  colnames(all_clean) <- namelist
-  
-  assign("all_clean",all_clean,.GlobalEnv)
-  all_clean %>% head()
-}
+
 
 weed %>% clean_top_char()
 
@@ -312,11 +265,42 @@ pyramid.plot(common_words_25$sativa, common_words_25$indica,
              top.labels = c("sativa", "Words", "indica"),
              main = "Words in Common", laxlab = NULL, 
              raxlab = NULL, unit = NULL)
+rm(common_words, common_words_25)
+
+effects <- weed_effects$Effects %>% unique() %>% tolower()
+rm(weed_effects)
+
+
+effectByType <- all_clean %>%
+  as.data.frame() %>% 
+  rownames_to_column('word') %>% 
+  filter(word %in% effects) %>% 
+  mutate(word=factor(word))
+  
+
+effectByType %>% 
+  plot_ly(x=~hybrid,y=~sativa,z= ~indica, color=~word, hoverinfo = 'text', colors = viridis(15),
+          text = ~paste('Effects:', word,
+                        '<br>hybrid:', hybrid,
+                        '<br>sativa:', sativa,
+                        '<br>indica:', indica)) %>% 
+  add_markers(opacity = 0.8) %>%
+  layout(title = "Effects by Different Cannabis",
+         annotations=list(yref='paper',xref="paper",y=1.05,x=1.1, text="Effects",showarrow=F),
+         scene = list(xaxis = list(title = 'hybrid'),
+                      yaxis = list(title = 'sativa'),
+                      zaxis = list(title = 'indica')))
+
+
+
+
+
+
 
 
 
 # Word association
-word_associate(weed$Description, match.string = c("hybrid"), 
+word_associate(weed$Description, match.string = c("happy"), 
                stopwords = c(stopwords("english"), c("thats","weve","hes","theres","ive","im",
                                                      "will","can","cant","dont","youve","us",
                                                      "youre","youll","theyre","whats","didnt")), 
