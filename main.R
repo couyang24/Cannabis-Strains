@@ -86,10 +86,18 @@ df2 <- weed_effects %>%
 
 
 
+
+
+
+
+
+
+
+
 # df2$data %>% head(1)
 
 (a <- highchart() %>% 
-  hc_chart(type = 'bar') %>% 
+  hc_chart(type = 'pie') %>% 
   hc_xAxis(type = "category") %>% 
   hc_add_series(name = 'number of cannabis', data = df1, colorByPoint = 1) %>% 
   hc_drilldown(
@@ -149,7 +157,7 @@ df2 <- weed_flavor %>%
       select(name, y, drilldown) %>%
       arrange(desc(y)))) 
 
-b <- highchart() %>% 
+(b <- highchart() %>% 
   hc_chart(type = 'bar') %>% 
   hc_xAxis(type = "category") %>% 
   hc_add_series(name = 'number of cannabis', data = df1, colorByPoint = 1) %>% 
@@ -159,7 +167,7 @@ b <- highchart() %>%
   ) %>%
   hc_legend(enabled = F) %>% 
   hc_title(text = "Type of Cannbis vs Flavor") %>% 
-  hc_add_theme(hc_theme_darkunica())
+  hc_add_theme(hc_theme_darkunica()))
 rm(df1, df2, weed_flavor)
 
 
@@ -171,6 +179,24 @@ lst <- list(
 
 hw_grid(lst, rowheight = 400)
 rm(a, b, lst)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -356,11 +382,11 @@ visNetwork(network3_node, network3_edg, height = "500px", width = "100%") %>%
 
 
 
-# Word association
-word_associate(weed$Description, match.string = c("happy"), 
-               stopwords = c(stopwords("english"), c("thats","weve","hes","theres","ive","im",
-                                                     "will","can","cant","dont","youve","us",
-                                                     "youre","youll","theyre","whats","didnt")), 
-               network.plot = TRUE, cloud.colors = c("gray85", "darkred"))
-# Add title
-title(main = "Master Yoda")
+# # Word association
+# word_associate(weed$Description, match.string = c("happy"), 
+#                stopwords = c(stopwords("english"), c("thats","weve","hes","theres","ive","im",
+#                                                      "will","can","cant","dont","youve","us",
+#                                                      "youre","youll","theyre","whats","didnt")), 
+#                network.plot = TRUE, cloud.colors = c("gray85", "darkred"))
+# # Add title
+# title(main = "Master Yoda")
