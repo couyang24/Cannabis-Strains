@@ -8,7 +8,7 @@ library(viridis)
 library(wordcloud)
 library(plotrix)
 library(DescTools)
-
+library(tidytext)
 
 weed <- read_csv("input/cannabis.csv")
 
@@ -147,9 +147,13 @@ df1 <- weed %>%
 
 df2 <- weed_flavor %>% 
   group_by(Type, Flavor) %>% 
-  mutate(y = n(), colorByPoint = 1) %>% 
+  mutate(y = n()
+         # , colorByPoint = 1
+         ) %>% 
   arrange(desc(y)) %>%
-  group_by(name = Type, id = Type, colorByPoint) %>% 
+  group_by(name = Type, id = Type
+           # , colorByPoint
+           ) %>% 
   do(data = list_parse(
     mutate(.,name = Flavor, drilldown = tolower(paste(Type, Flavor,sep=": "))) %>% 
       group_by(name, drilldown) %>% 
@@ -294,6 +298,107 @@ weed$Description %>%
          yaxis = list(title = " "), 
          xaxis = list(title = ""), 
          margin = list(l = 100))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+df <- all_clean %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  gather(type, value, -1)
+
+df1 <- df %>% 
+  group_by(name = type, drilldown = type) %>% 
+  summarise(y = sum(value)) %>% 
+  arrange(desc(y))
+
+
+df2 <- df %>% 
+  group_by(type, rowname) %>% 
+  summarise(total = sum(value)) %>% 
+  arrange(desc(total)) %>% 
+  group_by(name = type, id = type) %>% 
+  do(data = list_parse(
+    mutate(., name = rowname, drilldown = tolower(paste(type, rowname, sep=": "))) %>% 
+      group_by(name, drilldown) %>% 
+      summarise(y = sum(total)) %>% 
+      select(name, y, drilldown) %>%
+      arrange(desc(y))) %>% 
+      head(30))
+
+  
+
+highchart() %>% 
+  hc_chart(type = 'column') %>% 
+  hc_xAxis(type = "category") %>% 
+  hc_add_series(name = 'number of words in comments', data = df1, colorByPoint = 1) %>% 
+  hc_drilldown(
+    allowPointDrilldown = TRUE,
+    series =list_parse(df2)
+  ) %>%
+  hc_legend(enabled = F) %>% 
+  hc_title(text = "Top 30 Words by Type of Cannbis") %>% 
+  hc_add_theme(hc_theme_darkunica())
+
+
+rm(df2)
+
+
+df2 <- df %>%
+  inner_join(get_sentiments("loughran"), by = c('rowname' = 'word')) %>% 
+  group_by(type,sentiment) %>% 
+  summarise(total = sum(value)) %>% 
+  arrange(desc(total)) %>% 
+  group_by(name = type, id = type) %>% 
+  do(data = list_parse(
+    mutate(., name = sentiment, drilldown = tolower(paste(type, sentiment, sep = ": "))) %>% 
+      group_by(name, drilldown) %>% 
+      summarise(y = sum(total)) %>% 
+      select(name, y , drilldown) %>% 
+      arrange(desc(y))
+  ))
+
+
+
+highchart() %>% 
+  hc_chart(type = 'column') %>% 
+  hc_xAxis(type = "category") %>% 
+  hc_add_series(name = 'number of words in comments', data = df1, colorByPoint = 1) %>% 
+  hc_drilldown(
+    allowPointDrilldown = TRUE,
+    series =list_parse(df2)
+  ) %>%
+  hc_legend(enabled = F) %>% 
+  hc_title(text = "Sentiment Analysis by Type of Cannbis") %>% 
+  hc_add_theme(hc_theme_darkunica())
+
+
+rm(df2)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

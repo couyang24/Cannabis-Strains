@@ -62,6 +62,10 @@ library(wordcloud)
 library(plotrix)
 library(DescTools)
 library(DT)
+library(ggraph)
+library(igraph)
+library(ggthemes)
+library(visNetwork)
 ```
 
 
@@ -179,8 +183,10 @@ weed_flavor %>%
 
 
 ******
-# Drill Down Graph for 3 Types by Effects and by Flavors 
+# Interactive Drill Down Graph for 3 Types by Effects 
 ******
+
+**Click the part to Drill Down!**
 
 
 ```{r  message=FALSE, warning=FALSE}
@@ -191,9 +197,13 @@ df1 <- weed %>%
 
 df2 <- weed_effects %>% 
   group_by(Type, Effects) %>% 
-  mutate(y = n(), colorByPoint =  1) %>% 
+  mutate(y = n()
+         # , colorByPoint =  1
+         ) %>% 
   arrange(desc(y)) %>%
-  group_by(name = Type, id = Type, colorByPoint) %>% 
+  group_by(name = Type, id = Type
+           # , colorByPoint
+           ) %>% 
   do(data = list_parse(
     mutate(.,name = Effects, drilldown = tolower(paste(Type, Effects,sep=": "))) %>% 
       group_by(name, drilldown) %>% 
@@ -202,7 +212,7 @@ df2 <- weed_effects %>%
       arrange(desc(y)))) 
 
 a <- highchart() %>% 
-  hc_chart(type = 'bar') %>% 
+  hc_chart(type = 'pie') %>% 
   hc_xAxis(type = "category") %>% 
   hc_add_series(name = 'number of cannabis', data = df1, colorByPoint = 1) %>% 
   hc_drilldown(
@@ -210,30 +220,8 @@ a <- highchart() %>%
     series =list_parse(df2)
   ) %>%
   hc_legend(enabled = F) %>% 
-  hc_title(text = "Type of Cannbis vs Effects") %>% 
+  hc_title(text = "Type of Cannbis vs Effects Pie Chart") %>% 
   hc_add_theme(hc_theme_darkunica())
-
-rm(df1, df2)
-
-
-
-
-df1 <- weed %>% 
-  group_by(name = Type, drilldown = Type) %>% 
-  summarise(y = n()) %>% 
-  arrange(desc(y))
-
-df2 <- weed_flavor %>% 
-  group_by(Type, Flavor) %>% 
-  mutate(y = n(), colorByPoint = 1) %>% 
-  arrange(desc(y)) %>%
-  group_by(name = Type, id = Type, colorByPoint) %>% 
-  do(data = list_parse(
-    mutate(.,name = Flavor, drilldown = tolower(paste(Type, Flavor,sep=": "))) %>% 
-      group_by(name, drilldown) %>% 
-      summarise(y=n()) %>% 
-      select(name, y, drilldown) %>%
-      arrange(desc(y)))) 
 
 b <- highchart() %>% 
   hc_chart(type = 'bar') %>% 
@@ -244,7 +232,76 @@ b <- highchart() %>%
     series =list_parse(df2)
   ) %>%
   hc_legend(enabled = F) %>% 
-  hc_title(text = "Type of Cannbis vs Flavor") %>% 
+  hc_title(text = "Type of Cannbis vs Effects Bar Chart") %>% 
+  hc_add_theme(hc_theme_darkunica())
+rm(df1, df2)
+
+
+
+lst <- list(
+  a,
+  b
+)
+
+
+
+hw_grid(lst, rowheight = 400)
+rm(a, b, lst)
+```
+
+******
+# Interactive Drill Down Graph for 3 Types by Flavors 
+******
+
+
+**Click the part to Drill Down!**
+
+
+```{r  message=FALSE, warning=FALSE}
+df1 <- weed %>% 
+  group_by(name = Type, drilldown = Type) %>% 
+  summarise(y = n()) %>% 
+  arrange(desc(y))
+
+df2 <- weed_flavor %>% 
+  group_by(Type, Flavor) %>% 
+  mutate(y = n(), colorByPoint = 1) %>% 
+  arrange(desc(y)) %>%
+  group_by(name = Type, id = Type
+           # , colorByPoint
+           ) %>% 
+  do(data = list_parse(
+    mutate(., name = Flavor, drilldown = tolower(paste(Type, Flavor,sep=": "))) %>% 
+      group_by(name, drilldown) %>% 
+      summarise(y=n()) %>% 
+      select(name, y, drilldown) %>%
+      arrange(desc(y)))) 
+
+a <- highchart() %>% 
+  hc_chart(type = 'pie') %>% 
+  hc_xAxis(type = "category") %>% 
+  hc_add_series(name = 'number of cannabis', data = df1
+                # , colorByPoint = 1
+                ) %>% 
+  hc_drilldown(
+    allowPointDrilldown = TRUE,
+    series =list_parse(df2)
+  ) %>%
+  hc_legend(enabled = F) %>% 
+  hc_title(text = "Type of Cannbis vs Flavor Pie Chart") %>% 
+  hc_add_theme(hc_theme_darkunica())
+
+
+b <- highchart() %>% 
+  hc_chart(type = 'bar') %>% 
+  hc_xAxis(type = "category") %>% 
+  hc_add_series(name = 'number of cannabis', data = df1, colorByPoint = 1) %>% 
+  hc_drilldown(
+    allowPointDrilldown = TRUE,
+    series =list_parse(df2)
+  ) %>%
+  hc_legend(enabled = F) %>% 
+  hc_title(text = "Type of Cannbis vs Flavor Bar Chart") %>% 
   hc_add_theme(hc_theme_darkunica())
 rm(df1, df2)
 
@@ -380,6 +437,9 @@ weed$Description %>%
 ******
 
 
+**Sativa vs Indica**
+
+
 ```{r  message=FALSE, warning=FALSE}
 commonality.cloud(all_clean[,c("sativa","indica")], colors = "steelblue1", at.least = 2, max.words = 100)
 
@@ -391,6 +451,9 @@ commonality.cloud(all_clean[,c("sativa","indica")], colors = "steelblue1", at.le
 ******
 
 
+**Sativa vs Indica**
+
+
 ```{r  message=FALSE, warning=FALSE}
 comparison.cloud(all_clean[,c("sativa","indica")], colors = c("#F8766D", "#00BFC4"), max.words=50)
 ```
@@ -399,6 +462,9 @@ comparison.cloud(all_clean[,c("sativa","indica")], colors = c("#F8766D", "#00BFC
 ******
 # Pramid Plot
 ******
+
+
+**Sativa vs Indica**
 
 
 ```{r  message=FALSE, warning=FALSE}
@@ -452,6 +518,82 @@ effectByType %>%
                       yaxis = list(title = 'sativa'),
                       zaxis = list(title = 'indica')))
 ```
+
+
+******
+# Hybrid Network 1
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+effectByType %>%
+  mutate(type = 'hybrid') %>%
+  select(word, type, hybrid) %>% 
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = hybrid), show.legend = FALSE) +
+  geom_node_point(color = "firebrick", size = 20, alpha = .5) +
+  geom_node_text(aes(label = name), col = "white") +
+  theme_solarized(light = F)
+```
+
+
+******
+# Hybrid Netword 2
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+network3_edg <- effectByType %>% 
+  mutate(type = 'hybrid') %>%
+  select(word, type, hybrid) %>% 
+  filter(hybrid>0) %>% 
+  rename(from = type, to = word, weight = hybrid, width = hybrid)
+
+network3_node <- effectByType %>% 
+  mutate(type = 'hybrid') %>%
+  filter(hybrid>0) %>% 
+  select(word, hybrid) %>% 
+  rename(id = word, size = hybrid)
+network3_node$label <- network3_node$id # Node label
+
+network3_node <- bind_rows(network3_node,data.frame(id = 'hybrid',  size = 24,  label = 'hybrid'))
+
+visNetwork(network3_node, network3_edg, height = "500px", width = "100%") %>% 
+  visIgraphLayout(layout = "layout_with_lgl") %>% 
+  visEdges(shadow = TRUE,
+           color = list(color = "gray", highlight = "orange"))
+```
+
+
+******
+# Hybrid Netword 3
+******
+
+
+```{r  message=FALSE, warning=FALSE}
+network3_edg <- effectByType %>% 
+  mutate(type = 'hybrid') %>%
+  select(word, type, hybrid) %>% 
+  filter(hybrid>0) %>% 
+  rename(from = type, to = word)
+
+network3_node <- effectByType %>% 
+  mutate(type = 'hybrid') %>%
+  filter(hybrid>0) %>% 
+  select(word) %>% 
+  rename(id = word)
+network3_node$label <- network3_node$id # Node label
+
+network3_node <- bind_rows(network3_node,data.frame(id = 'hybrid', label = 'hybrid'))
+
+visNetwork(network3_node, network3_edg, height = "500px", width = "100%") %>% 
+  # visIgraphLayout(layout = "layout_with_lgl") %>% 
+  visEdges(shadow = TRUE,
+           color = list(color = "gray", highlight = "orange"))
+```
+
+
 
 
 ******
