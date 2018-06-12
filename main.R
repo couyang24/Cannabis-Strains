@@ -100,10 +100,10 @@ df2 <- weed_effects %>%
   hc_chart(type = 'pie') %>% 
   hc_xAxis(type = "category") %>% 
   hc_add_series(name = 'number of cannabis', data = df1, colorByPoint = 1) %>% 
-  hc_drilldown(
-    allowPointDrilldown = TRUE,
-    series =list_parse(df2)
-  ) %>%
+  # hc_drilldown(
+  #   allowPointDrilldown = TRUE,
+  #   series =list_parse(df2)
+  # ) %>%
   hc_legend(enabled = F) %>% 
   hc_title(text = "Type of Cannbis vs Effects") %>% 
   hc_add_theme(hc_theme_darkunica()))
