@@ -20,6 +20,18 @@ weed %>% head()
 
 weed$Rating %>% PlotFdist("Cannabis Ranking Distribution")
 
+type <- weed$Type %>% unique()
+
+for (i in 1:length(type)){
+weed[weed$Type == type[i],]$Rating %>% 
+  PlotFdist(paste("Cannabis Ranking Distribution - ", toupper(type[i])))
+}
+
+
+hcboxplot(weed$Rating, weed$Type, color = 'firebrick') %>% 
+  hc_add_theme(hc_theme_monokai()) %>% 
+  hc_chart(type = 'bar')
+
 
 
 
@@ -62,6 +74,16 @@ weed_effects <- weed %>%
 weed_effects %>% 
   count(Effects) %>% 
   hchart(type = 'treemap', hcaes(x = 'Effects', value = 'n', color = 'n'))
+
+weed_effects %>% head()
+
+hcboxplot(weed_effects$Rating, weed_effects$Effects, color = 'firebrick') %>% 
+  hc_add_theme(hc_theme_monokai()) %>% 
+  hc_chart(type = 'bar')
+
+
+
+
 
 
 df1 <- weed %>% 
@@ -137,6 +159,23 @@ weed_flavor <- weed %>%
 weed_flavor %>% 
   count(Flavor) %>% 
   hchart(type = 'treemap', hcaes(x = 'Flavor', value = 'n', color = 'n'))
+
+
+hcboxplot(weed_flavor$Rating, weed_flavor$Flavor, color = 'firebrick') %>% 
+  hc_add_theme(hc_theme_monokai()) %>% 
+  hc_chart(type = 'bar')
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -431,10 +470,10 @@ effectByType <- all_clean %>%
   as.data.frame() %>% 
   rownames_to_column('word') %>% 
   filter(word %in% effects) %>% 
-  mutate(word=factor(word))
+  mutate(word=as.factor(word))
   
 
-effectByType %>% 
+effectByType %>%
   plot_ly(x=~hybrid,y=~sativa,z= ~indica, color=~word, hoverinfo = 'text', colors = viridis(15),
           text = ~paste('Effects:', word,
                         '<br>hybrid:', hybrid,
