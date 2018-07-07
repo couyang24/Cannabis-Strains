@@ -470,12 +470,12 @@ effectByType <- all_clean %>%
   as.data.frame() %>% 
   rownames_to_column('word') %>% 
   filter(word %in% effects) %>% 
-  mutate(word=as.factor(word))
+  mutate(Word=as.factor(word))
   
 
 effectByType %>%
-  plot_ly(x=~hybrid,y=~sativa,z= ~indica, color=~word, hoverinfo = 'text', colors = viridis(15),
-          text = ~paste('Effects:', word,
+  plot_ly(x=~hybrid,y=~sativa,z= ~indica, hoverinfo = 'text', colors = viridis(15),
+          text = ~paste('Effects:', Word,
                         '<br>hybrid:', hybrid,
                         '<br>sativa:', sativa,
                         '<br>indica:', indica)) %>% 
