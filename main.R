@@ -29,7 +29,7 @@ weed[weed$Type == type[i],]$Rating %>%
 
 
 hcboxplot(weed$Rating, weed$Type, color = 'firebrick') %>% 
-  hc_add_theme(hc_theme_monokai()) %>% 
+  hc_add_theme(hc_theme_economist()) %>% 
   hc_chart(type = 'bar')
 
 
