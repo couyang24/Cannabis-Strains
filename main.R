@@ -1,7 +1,7 @@
 library(tidyverse)
 library(skimr)
 library(highcharter)
-library(qdap)
+# library(qdap)
 library(tm)
 library(plotly)
 library(viridis)
@@ -9,6 +9,9 @@ library(wordcloud)
 library(plotrix)
 library(DescTools)
 library(tidytext)
+
+
+
 
 weed <- read_csv("input/cannabis.csv")
 
